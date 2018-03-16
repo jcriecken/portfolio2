@@ -22,16 +22,16 @@ public class RestControl {
 
     private String json;
 
-    @RequestMapping("/search/")
+    @RequestMapping("/search")
     public String handleSearch(@RequestParam("type") RequestCategory type, @RequestParam("query") String title) {
         SpotifyRequest spotifyRequester = new SpotifyRequest(RequestType.SEARCH);
         try {
-            spotifyRequester.performeRequestSearch(type, title);
+            json = spotifyRequester.performeRequestSearch(type, title).get();
+            System.out.println(json);
         } catch (WrongRequestTypeException wTE) {
             System.out.println(wTE);
         }
-        return "test";
-
+        return json;
     }
 
 }
