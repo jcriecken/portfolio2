@@ -7,8 +7,9 @@ package dhbw;
 
 /**
  *
- * @author D067849
+ * @author philligardt
  */
-public class SearchClass {
+public class ResponseBuilder {
+    
     
 }
