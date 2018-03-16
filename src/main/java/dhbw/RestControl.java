@@ -28,6 +28,7 @@ public class RestControl {
         try {
             json = spotifyRequester.performeRequestSearch(type, title).get();
             System.out.println(json);
+            
         } catch (WrongRequestTypeException wTE) {
             System.out.println(wTE);
         }
