@@ -14,6 +14,8 @@ import dhbw.pojo.search.track.SearchTrack;
 import dhbw.spotify.RequestCategory;
 import dhbw.spotify.RequestType;
 import dhbw.spotify.SpotifyRequest;
+import dhbw.spotify.WrongRequestTypeException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,42 +29,58 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class RestControl {
 
-    private String json;
-    private String text;
-
     @RequestMapping("/search")
     public String handleSearch(@RequestParam(value = "type") String type, @RequestParam("query") String query) {
+        String json = "";
+        String help;
         SpotifyRequest spotifyRequester = new SpotifyRequest(RequestType.SEARCH);
         RequestCategory category = RequestCategory.valueOf(type);
         try {
-            json = spotifyRequester.performeRequestSearch(category, query).get();
+            help = spotifyRequester.performeRequestSearch(category, query, 10, "DE").get();
             ObjectMapper map = new ObjectMapper();
-            List<dhbw.pojo.search.track.Item> tracks = new ArrayList<>();
-            List<dhbw.pojo.search.album.Item> albums = new ArrayList<>();
-            List<dhbw.pojo.search.artist.Item> artists = new ArrayList<>();
+            List<dhbw.pojo.search.track.Item> tracks;
+            List<dhbw.pojo.search.album.Item> albums;
+            List<dhbw.pojo.search.artist.Item> artists;
             List<dhbw.pojo.result.search.SearchResultList> results = new ArrayList<>();
             if (type.equals("TRACK")){
-                SearchTrack searchT = map.readValue(json, SearchTrack.class);
-                tracks = searchT.getTracks().getItems();
-                for (dhbw.pojo.search.track.Item temp : tracks){
+                SearchTrack searchTrack = map.readValue(help, SearchTrack.class);
+                tracks = searchTrack.getTracks().getItems();
+                tracks.forEach((temp) -> {
                     String id = temp.getId();
                     String name = temp.getName();
-                    String genre = temp.getType();
-                    String uri = temp.getUri();
-                    
-                }
+                    String description = temp.getType();
+                    String playLink = temp.getUri();
+                    results.add(new SearchResultList(id, name, description, playLink));
+                });
             }
             if (type.equals("ALBUM")){
-                
+                SearchAlbum searchAlbum = map.readValue(help, SearchAlbum.class);
+                albums = searchAlbum.getAlbums().getItems();
+                albums.forEach((temp) -> {
+                    String id = temp.getId();
+                    String name = temp.getName();
+                    String description = temp.getType();
+                    String playLink = temp.getUri();
+                    results.add(new SearchResultList(id, name, description, playLink));
+                });
             }
             if (type.equals("ARTIST")){
-                
+                SearchArtist searchArtist = map.readValue(help, SearchArtist.class);
+                artists = searchArtist.getArtists().getItems();
+                artists.forEach((temp) -> {
+                    String id = temp.getId();
+                    String name = temp.getName();
+                    String description = temp.getType();
+                    String playLink = temp.getUri();
+                    results.add(new SearchResultList(id, name, description, playLink));
+                });
             }
-            
+            SearchResult searchResult = new SearchResult(query, type, results);
+            json = map.writeValueAsString(searchResult);
             
             //System.out.println(json);
             
-        } catch (Exception e) {
+        } catch (WrongRequestTypeException | IOException e) {
             System.out.println(e);
         }
         return json;
